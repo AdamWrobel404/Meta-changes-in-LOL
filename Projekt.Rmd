@@ -1,0 +1,246 @@
+---
+title: "Zmiany mety na przestrzeni lat przed Worlds'ami"
+author: "Adam Wróbel"
+output: html_document
+---
+```{r}
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+library(htmltools)
+library(rvest)
+library(tidyverse)
+library(purrr)
+library(ggplot2)
+library(grid)
+library(jpeg)
+library(kableExtra)
+library(tidyverse)
+library(rio)
+library(dplyr)
+library(plotly)
+library(shiny)
+library(RColorBrewer)
+library(gridExtra)
+library(svgtools)
+library(jpeg)
+myPalette <- brewer.pal(5, "Set2") 
+TylkoKlasyNazwy <- import("ImionaKlasy.csv")
+Klasy_Bany_Procenty <- import("KlasyBany2.csv")
+TylkoBanyPro <- import("TylkoBanyPro.csv")
+TylkoLato <- import("TylkoLato.csv")
+TylkoWorldsy <- import("TylkoWorldsy.csv")
+IloscSummer <- import("BanyIloscSummer.csv")
+IloscWorlds <- import("BanyIloscWorlds.csv")
+#View(Klasy_Bany_Procenty)
+#View(Bohaterowie_Ban_Ratio)
+```
+
+```{r}
+View(Klasy_Bany_Procenty)
+Transponowana <- t(Klasy_Bany_Procenty)
+Inaczej <- data.frame(Transponowana)
+nowe_nazwy <- Inaczej[1, ]
+colnames(Inaczej) <- nowe_nazwy
+Inaczej <- Inaczej[-1, ]
+#View(Inaczej)
+View(TylkoBanyPro)
+View(TylkoKlasyNazwy)
+
+```
+
+
+```{r}
+library(htmltools)
+HTML('<span style="font-size:28px; font-weight:bold;">Wprowadzenie</span>')
+```
+
+W dzisiejszym dynamicznym świecie esportu, konkurencja na najwyższym poziomie osiągnęła niezwykłe znaczenie, a zawodnicy z całego globu zbierają się, by rywalizować w najbardziej prestiżowych turniejach. Jednym z najbardziej oczekiwanych wydarzeń w kalendarzu esportowym są coroczne Mistrzostwa Świata, znane powszechnie jako "Worlds". To właśnie na tej globalnej scenie odbywają się niezapomniane pojedynki w świecie gier elektronicznych, zespoły walczące o miano najlepszego na świecie.
+
+W skrócie, projekt ten skupia się na analizie i prezentacji zmian w strategiach, popularności bohaterów w miarę upływu czasu. Poprzez zastosowanie różnorodnych narzędzi wizualizacyjnych, chcemy ukazać czytelnikowi, jak dynamiczna i zmienna może być scena esportowa na przestrzeni lat, wpływając zarówno na samą rozgrywkę, jak i na kulturę esportową jako całość.
+
+Zachęcamy do zgłębiania szczegółów prezentowanych wizualizacji, które pozwolą lepiej zrozumieć, jakie trendy i innowacje kształtowały świat esportu przed każdym zjawiskowym wydarzeniem Worlds. Przez analizę danych i ich wizualizację chcemy podkreślić, jakie czynniki wpływają na strategie zawodników oraz jak te zmiany oddziałują na dynamikę Mistrzostw Świata, czyniąc każdą edycję wyjątkową w swoim rodzaju.
+
+```{r}
+library(htmltools)
+HTML('<span style="font-size:28px; font-weight:bold;">Wizualizacja</span>')
+```
+
+```{r}
+View(TylkoBanyPro)
+dane_long <- gather(TylkoBanyPro, Klasy_Lata, Wartosc, -Class)
+Rok <- as.numeric(substring(dane_long$Klasy_Lata, 7))
+wykres <- ggplot(dane_long, aes(x = Rok, 
+                      y = Wartosc, 
+                      color = Class)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Wykres liniowy banowania klas bohaterów w latach 2016-2023",
+       x = "Rok",
+       y = "Wartość")
+wykres_interaktywny <- ggplotly(wykres)
+wykres_interaktywny
+```
+
+Na podstawie wykresy możemy stwierdzić jak zmieniała się częstotliwość banowania danych klas w porównaniu z innymi.
+W 2016 roku znacząco wysoki poziom banowania klasy Battlemage o wartości 28% sugeruje, że klasa ta mogła być uważana za dominującą lub problematyczną dla innych graczy. Być może posiadała ona umiejętności lub mechaniki gry, które sprawiały, że była szczególnie skuteczna lub trudna do pokonania w tym okresie. Wysoki poziom banowania może również świadczyć o tym, że społeczność graczy uznawała klasę Battlemage za kluczowy element mety. Najpoplarniejszymi bohaterami z tej klasy są: Taliyah, Cassiopeia, Rumble.
+
+Jednak spadek banowania z 28% w 2016 roku do 7% w 2023 roku sugeruje, że popularność i wpływ Battlemage uległy zmniejszeniu i stali się częściej banami sytuacyjnymi pod konkretnych graczy lub kompozycje.
+
+```{r}
+
+# Przekształcenie danych do formatu długiego
+dane1_long <- tidyr::gather(TylkoLato, Klasy_Lata, Wartosc, -Class)
+dane2_long <- tidyr::gather(TylkoWorldsy, Klasy_Lata, Wartosc, -Class)
+
+# Tworzenie pierwszego wykresu słupkowego
+wykres1 <- ggplot(dane1_long, aes(x = Class, y = Wartosc, fill = as.factor(as.numeric(substring(Klasy_Lata, 7))))) +
+  geom_col(position = "dodge", width = 0.7) +
+  labs(title = "Wykres 1",
+       x = "NULL",
+       y = "Wartość",
+       fill = "Rok") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+# Tworzenie drugiego wykresu słupkowego
+wykres2 <- ggplot(dane2_long, aes(x = Class, y = Wartosc, fill = as.factor(as.numeric(substring(Klasy_Lata, 7))))) +
+  geom_col(position = "dodge", width = 0.7) +
+  labs(title = "Porównanie rozłożenia BanRatio klas na przetrzeni lat",
+       x = "NULL",
+       y = "Wartość",
+       fill = "Rok") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+#theme(axis.text.x = element_text(angle = 45, hjust = 1) 
+      
+wykres1 <- wykres1 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+wykres2 <- wykres2 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Łączenie wykresów w jedno
+wykresy_polaczone <- subplot(wykres1, wykres2, nrows = 1)
+
+# Wyświetlanie połączonych wykresów
+wykresy_polaczone
+```
+
+Możemy zauważyć nagły wzrost częstotliwości banowania klasy Vanguard w 2023 roku z 2022 roku. Wzrost jest 10% co może sugerować, że stała się kluczowym elementem mety w danym okresie. Jej obecność w rozgrywce mogła znacząco wpływać na strategie i decyzje graczy, zmuszając innych do dostosowania się do jej obecności.
+
+Patrząc na najczęściej banowanych postaci mającyh tę klasę z tego roku znajdziemy takie postaci jak: Maokai i Sejuani. Swiadomość tego, że te postacie są tzw. junglerami możemy wniskować, że meta na tej roli skręciła w motywy takie jak: priorytetyzowanie pomocy sojusznikom na liniach, zdobywanie obiektów neutralnych na mapie oraz mały koszt aby bohater mógł jak najlepiej wykonywać swoje zadanie bycia awangardą i inicjatorem w formacji swojej drużyny. 
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+# Przygotowanie danych: przekształcenie do formatu "długi" (long format)
+dane_long <- TylkoBanyPro %>%
+  pivot_longer(cols = -Class, names_to = "Sezon", values_to = "Wartosc")
+
+# Kolejność kolumn na heatmapie
+kolejnosc_kolumn <- c(
+  "Summer2016", "Worlds2016", 
+  "Summer2017", "Worlds2017", 
+  "Summer2018", "Worlds2018", 
+  "Summer2019", "Worlds2019", 
+  "Summer2020", "Worlds2020", 
+  "Summer2021", "Worlds2021", 
+  "Summer2022", "Worlds2022", 
+  "Summer2023", "Worlds2023"
+)
+
+Sezon <- factor(dane_long$Sezon, levels = kolejnosc_kolumn)
+
+# Wykres heatmap
+ggplot(dane_long, aes(x = factor(Sezon, levels = kolejnosc_kolumn), y = Class, fill = Wartosc)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 270, hjust = 1, vjust = 1, size = 10, margin = margin(t = 10, r = 10)))+
+  labs(x = "Sezon")
+```
+
+Można zauważyć, że pojawia się cykl klasy Diver, której popularność banowania rosła od Summer 2018 do kolminacji podczas Worlds 2019, żeby znów spaść i zacząć się odbudowywać. Wzrost i spadek popularności lub skuteczności mogą wynikać z tzw. cykli metagry, czyli zmian w preferencjach graczy i strategiach w danym okresie. To może wynikać z aktualizacji gry, nowych postaci, zmian w mechanice lub balansie postaci.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+IloscSummer$Summer <- rowSums(IloscSummer[, 2:9])
+
+KonkretneIlosciSummer <- data.frame(Class = c("Enchanter", "Catcher", "Juggernaut", "Diver", "Burst", "Battlemage", 
+                                             "Artillery","Marksman", "Assassin", "Skirmisher", "Vanguard", "Warden", 
+                                             "Specialist"))
+#sum(IloscSummer$Summer)
+KonkretneIlosciSummer$Procenty <- IloscSummer$Summer / 212931 * 100
+KonkretneIlosciSummer$Procenty <- round(KonkretneIlosciSummer$Procenty, digits=2)
+View(KonkretneIlosciSummer)
+
+IloscWorlds$Worlds <- rowSums(IloscWorlds[, 2:9])
+KonkretneIlosciWorlds <- data.frame(Class = c("Enchanter", "Catcher", "Juggernaut", "Diver", "Burst", "Battlemage", 
+                                             "Artillery","Marksman", "Assassin", "Skirmisher", "Vanguard", "Warden", 
+                                             "Specialist"))
+#sum(IloscWorlds$Worlds)
+KonkretneIlosciWorlds$Procenty <- IloscWorlds$Worlds / 8789 * 100
+KonkretneIlosciWorlds$Procenty <- round(KonkretneIlosciWorlds$Procenty, digits = 2)
+View(KonkretneIlosciSummer)
+View(KonkretneIlosciWorlds)
+```
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+kolory <- rainbow(length(KonkretneIlosciSummer$Class))
+# Stwórz wykres kołowy
+wykres1 <- ggplot(KonkretneIlosciSummer, aes(x = "", y = Procenty, fill = Class)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +  # Konwersja na układ polar
+  theme_void()+   # Usunięcie niepotrzebnych elementów
+  scale_fill_manual(values = kolory)+
+  ggtitle("Wybór klas w Summer")+
+  theme(legend.position = "none")
+
+wykres2 <- ggplot(KonkretneIlosciWorlds, aes(x = "", y = Procenty, fill = Class)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +  # Konwersja na układ polar
+  theme_void()+   # Usunięcie niepotrzebnych elementów
+  scale_fill_manual(values = kolory)+
+  theme(legend.position = "none")+  # Usuń legendę
+  ggtitle("Wybór klas na Worldsach")
+
+wykres3 <- ggplot(KonkretneIlosciWorlds, aes(x = "", y = Procenty, fill = Class)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +  # Konwersja na układ polar
+  theme_void()+   # Usunięcie niepotrzebnych elementów
+  scale_fill_manual(values = kolory)+
+  coord_equal() 
+
+grid.arrange(wykres1, wykres2, wykres3, ncol = 3)
+```
+
+Największa róznica wynosi ~2% w klasie Burst. Dewiacja na poziomie 2% może wskazywać na starania twórców gry w celu utrzymania balansu pomiędzy różnymi klasami postaci. Starają się oni zapewnić, żeby żadna z klas nie była zbyt dominująca w danej dziedzinie. Może to również oznaczać, że umiejętności Burst są bardzo cenione w mecie gry, a gracze skłaniają się ku postaciom z podobnym potencjałem zadawania obrażeń.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+library(htmltools)
+HTML('<span style="font-size:28px;">Najczęściej banowane postacie</span>')
+```
+![](zdjencie.png){#image}
+
+```{r}
+library(htmltools)
+HTML('<span style="font-size:28px;font-weight:bold;">Podsumowanie</span>')
+```
+
+W ramach tego projektu wizualizacji danych skoncentrowaliśmy się na analizie zmian w banowaniu różnych klas w trakcie lat. Analiza wykresów liniowych oraz słupkowych pozwoliła nam zgłębić ewolucję mety, strategii graczy i zmian w popularności poszczególnych klas na przestrzeni lat.
+
+Wykresy liniowe ukazały dynamiczne trendy w popularności klas, podczas gdy wykresy słupkowe dostarczyły nam szczegółowego spojrzenia na konkretne okresy, takie jak wzrost banowania klasy Vanguard z 6% w 2022 roku do 18% w 2023 roku. Te zmiany w banowaniu mogą być interpretowane jako reakcja społeczności graczy na zmieniającą się metę, a także na wprowadzone aktualizacje i zmiany w balansie gry.
+
+```{r}
+library(htmltools)
+HTML('<span style="font-size:28px;font-weight:bold;">Zakończenie</span>')
+```
+
+Analiza danych pokazuje, że esportowy świat gier elektronicznych to dynamiczna przestrzeń, gdzie strategie, preferencje graczy i popularność klas ulegają ciągłym zmianom. Wzrost banowania klasy Vanguard w 2023 roku sugeruje, że ta klasa stała się istotnym czynnikiem w rozgrywce, a jej obecność miała znaczący wpływ na decyzje graczy.
+
+Projekt ten nie tylko pozwala zrozumieć, jakie trendy kształtują esportową scenę, ale także podkreśla, jak istotne są aktualizacje gry, zmiany w balansie, a także adaptacyjność społeczności graczy. Wnioski płynące z tej analizy mogą być przydatne dla twórców gier, graczy i wszystkich zainteresowanych dynamicznym światem esportu, pomagając zrozumieć, jak zmieniające się czynniki wpływają na strategie i preferencje w grach wieloosobowych.
+
+
+```{r}
+#5. Coś o ostatnich mistrzostwach 
+```
+
